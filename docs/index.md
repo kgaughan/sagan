@@ -76,19 +76,20 @@ workflows:
     init:
       run:
         - cmd: terraform init
+      finalize:
+        - cmd: rm -rf .terraform
     plan:
-      run:
-        - cmd: terraform plan -plan $plan
       requires:
         ".terraform": init
+      run:
+        - cmd: terraform plan -plan $plan
+      finalize:
+        - cmd: rm -rf $plan
     apply:
       requires:
         "$plan": plan
       run:
         - cmd: terraform apply $plan
-    cleanup:
-      run:
-        - cmd: rm -rf .terraform $plan
 projects:
   # Every project has a path. The last element in the path is used as the
   # default project name.

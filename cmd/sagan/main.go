@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
 	"os"
 	"path"
 
@@ -27,7 +26,8 @@ func main() {
 	}
 	cfg := &config.Config{}
 	if err := cfg.Load(*cfgPath); err != nil {
-		log.Fatal(err)
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
 	}
 	fmt.Printf("%v %#v", *interactive, cfg)
 }
