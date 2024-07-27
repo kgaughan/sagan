@@ -1,15 +1,17 @@
+NAME:=sagan
+
 SOURCE:=$(wildcard internal/*.go internal/*/*.go cmd/*/*.go)
 DOCS:=$(wildcard docs/*.md mkdocs.yml)
 
-build: go.mod sagan
+build: go.mod $(NAME)
 
 tidy: go.mod fmt
 
 clean:
-	rm -f sagan dist
+	rm -rf $(NAME) dist site
 
-sagan: $(SOURCE) go.sum
-	CGO_ENABLED=0 go build -tags netgo -trimpath -ldflags '-s -w' -o sagan ./cmd/sagan
+$(NAME): $(SOURCE) go.sum
+	CGO_ENABLED=0 go build -tags netgo -trimpath -ldflags '-s -w' -o $(NAME) ./cmd/$(NAME)
 
 update:
 	go get -u ./...
