@@ -28,8 +28,15 @@ fmt:
 lint:
 	go vet ./...
 
-docs: $(DOCS)
-	mkdocs build
+docs: .venv $(DOCS)
+	.venv/bin/mkdocs build
+
+.venv: requirements.txt
+	uv venv
+	uv pip install -r requirements.txt
+
+requirements.txt: requirements.in
+	uv pip compile $< > $@
 
 tests:
 	go test -cover ./...
