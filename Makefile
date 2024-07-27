@@ -28,6 +28,9 @@ fmt:
 lint:
 	go vet ./...
 
+serve-docs: .venv
+	.venv/bin/mkdocs serve
+
 docs: .venv $(DOCS)
 	.venv/bin/mkdocs build
 
@@ -43,4 +46,4 @@ tests:
 
 .DEFAULT: build
 
-.PHONY: build clean tidy update fmt lint docs tests
+.PHONY: build clean tidy update fmt lint docs tests serve-docs
