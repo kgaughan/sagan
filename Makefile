@@ -1,15 +1,17 @@
+NAME:=sagan
+
 SOURCE:=$(wildcard internal/*.go internal/*/*.go cmd/*/*.go)
 DOCS:=$(wildcard docs/*.md mkdocs.yml)
 
-build: go.mod sagan
+build: go.mod $(NAME)
 
 tidy: go.mod fmt
 
 clean:
-	rm -f sagan dist
+	rm -rf $(NAME) dist site
 
-sagan: $(SOURCE) go.sum
-	CGO_ENABLED=0 go build -tags netgo -trimpath -ldflags '-s -w' -o sagan ./cmd/sagan
+$(NAME): $(SOURCE) go.sum
+	CGO_ENABLED=0 go build -tags netgo -trimpath -ldflags '-s -w' -o $(NAME) ./cmd/$(NAME)
 
 update:
 	go get -u ./...
@@ -28,12 +30,22 @@ fmt:
 lint:
 	go vet ./...
 
-docs: $(DOCS)
-	mkdocs build
+serve-docs: .venv
+	.venv/bin/mkdocs serve
+
+docs: .venv $(DOCS)
+	.venv/bin/mkdocs build
+
+.venv: requirements.txt
+	uv venv
+	uv pip install -r requirements.txt
+
+requirements.txt: requirements.in
+	uv pip compile $< > $@
 
 tests:
 	go test -cover ./...
 
 .DEFAULT: build
 
-.PHONY: build clean tidy update fmt lint docs tests
+.PHONY: build clean tidy update fmt lint docs tests serve-docs
