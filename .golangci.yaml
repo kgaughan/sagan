@@ -1,0 +1,35 @@
+---
+linters:
+  disable-all: true
+  enable:
+    # fast, autofix
+    - dupword
+    - godot
+    - gofumpt
+    - goimports
+    - whitespace
+
+    # fast, nofix
+    - dupl
+    - gci
+    - ineffassign
+
+    # slow, nofix
+    - err113
+    - errcheck
+    - errname
+    - errorlint
+    - gosimple
+    - govet
+    - nonamedreturns
+    - revive
+    - staticcheck
+    - tenv
+    - typecheck
+    - unconvert
+    - unused
+    - wrapcheck
+
+    # Undecided
+    - tparallel
+    - gosec

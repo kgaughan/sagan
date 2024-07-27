@@ -1,33 +1,31 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"os"
-	"path"
 
 	"github.com/kgaughan/sagan/internal/config"
 	"github.com/kgaughan/sagan/internal/version"
+	flag "github.com/spf13/pflag"
 )
 
 func main() {
-	flag.Usage = func() {
-		out := flag.CommandLine.Output()
-		name := path.Base(os.Args[0])
-		fmt.Fprintf(out, "%s (v%s) - a task runner\n\n", name, version.Version)
-		fmt.Fprintf(out, "Usage:\n  %s [flags]\n\n", name)
-		fmt.Fprintf(out, "Flags:\n")
-		flag.PrintDefaults()
-	}
 	flag.Parse()
-	if *printVersion {
+
+	if *PrintVersion {
 		fmt.Println(version.Version)
 		return
 	}
+	if *ShowHelp {
+		flag.Usage()
+		os.Exit(0)
+	}
+
 	cfg := &config.Config{}
-	if err := cfg.Load(*cfgPath); err != nil {
+	if err := cfg.Load(*ConfigPath); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
-	fmt.Printf("%v %#v", *interactive, cfg)
+
+	fmt.Printf("%v %#v", *Interactive, cfg)
 }

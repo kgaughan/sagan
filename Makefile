@@ -1,18 +1,26 @@
-NAME:=sagan
-
-VERSION:=$(shell (git describe --tags 2>/dev/null || echo 'v0.0.0') | cut -c2-)
-
 SOURCE:=$(wildcard internal/*.go internal/*/*.go cmd/*/*.go)
+DOCS:=$(wildcard docs/*.md mkdocs.yml)
 
-build: go.mod $(NAME)
+build: go.mod sagan
 
 tidy: go.mod fmt
 
 clean:
-	rm -f $(NAME)
+	rm -f sagan dist
 
-$(NAME): $(SOURCE) go.sum
-	CGO_ENABLED=0 go build -trimpath -ldflags '-s -w -X github.com/kgaughan/$(NAME)/internal/version.Version=$(VERSION)' -o $(NAME) ./cmd/$(NAME)
+sagan: $(SOURCE) go.sum
+	CGO_ENABLED=0 go build -tags netgo -trimpath -ldflags '-s -w' -o sagan ./cmd/sagan
+
+update:
+	go get -u ./...
+	go mod tidy
+
+go.sum: go.mod
+	go mod verify
+	@touch go.sum
+
+go.mod: $(SOURCE)
+	go mod tidy
 
 fmt:
 	go fmt ./...
@@ -20,13 +28,12 @@ fmt:
 lint:
 	go vet ./...
 
-update:
-	go get -u ./...
-	go mod tidy
+docs: $(DOCS)
+	mkdocs build
 
-go.mod: $(SOURCE)
-	go mod tidy
+tests:
+	go test -cover ./...
 
 .DEFAULT: build
 
-.PHONY: build clean tidy update fmt lint
+.PHONY: build clean tidy update fmt lint docs tests
