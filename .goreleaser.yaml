@@ -1,0 +1,87 @@
+---
+version: 2
+
+before:
+  hooks:
+    - go mod tidy
+    - go mod download
+
+builds:
+  - env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - windows
+      - darwin
+      - freebsd
+    goarch:
+      - amd64
+      - arm64
+    main: ./cmd/sagan
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w -X github.com/kgaughan/sagan/internal/version.Version={{.Version}}
+    mod_timestamp: "{{ .CommitTimestamp }}"
+    tags:
+      - netgo
+
+brews:
+  - name: sagan
+    ids:
+      - archives
+    homepage: "https://github.com/kgaughan/sagan"
+    repository:
+      owner: kgaughan
+      name: homebrew-tap
+      token: "{{ .Env.TAP_GITHUB_TOKEN }}"
+    commit_author:
+      name: Keith Gaughan
+      email: k@stereochro.me
+    description: "Tool to help run collections of Terraform projects"
+    license: "MIT"
+    commit_msg_template: "Brew formula update for {{ .ProjectName }} version {{ .Tag }}"
+
+archives:
+  - format: tar.gz
+    id: archives
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- .Version }}_
+      {{- .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+      {{- if .Arm }}v{{ .Arm }}{{ end }}
+    # use zip for windows archives
+    format_overrides:
+      - goos: windows
+        format: zip
+    files:
+      - LICENSE
+      - README.md
+
+dockers:
+  - image_templates:
+      - "{{ .Env.REGISTRY }}/{{ .Env.IMAGE }}:{{ .Tag }}"
+      - "{{ .Env.REGISTRY }}/{{ .Env.IMAGE }}:latest"
+    skip_push: auto
+    use: buildx
+    dockerfile: Dockerfile
+
+checksum:
+  algorithm: sha256
+  name_template: '{{ .ProjectName }}_{{ .Version }}_SHA256SUMS'
+
+snapshot:
+  name_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+
+# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
+# vim: set ts=2 sw=2 tw=0 fo=cnqoj

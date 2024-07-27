@@ -106,7 +106,6 @@ func (c *Config) Load(path string) error {
 		return fmt.Errorf("could not read configuration: %w", err)
 	} else if err := yaml.Unmarshal(content, c); err != nil {
 		return fmt.Errorf("could not parse configuration: %w", err)
-	} else {
-		return nil
 	}
+	return nil
 }

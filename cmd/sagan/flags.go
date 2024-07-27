@@ -1,21 +1,26 @@
 package main
 
-import "flag"
+import (
+	"fmt"
+	"os"
+	"path"
 
-var cfgPath = flag.String(
-	"config",
-	"sagan.yaml",
-	"Path to configuration file",
+	"github.com/kgaughan/sagan/internal/version"
+	flag "github.com/spf13/pflag"
 )
 
-var interactive = flag.Bool(
-	"interactive",
-	false,
-	"Run in interactive mode",
+var (
+	ConfigPath   = flag.StringP("config", "c", "./sagan.yaml", "path to configuration file")
+	Interactive  = flag.BoolP("interactive", "i", false, "run in interactive mode")
+	PrintVersion = flag.BoolP("version", "V", false, "print version and exit")
+	ShowHelp     = flag.BoolP("help", "h", false, "show help")
 )
 
-var printVersion = flag.Bool(
-	"version",
-	false,
-	"Print version and exit",
-)
+func init() {
+	flag.Usage = func() {
+		name := path.Base(os.Args[0])
+		fmt.Fprintf(os.Stderr, "%s (v%s) - a task runner\n\n", name, version.Version)
+		fmt.Fprintf(os.Stderr, "Flags:\n")
+		flag.PrintDefaults()
+	}
+}
