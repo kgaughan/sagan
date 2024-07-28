@@ -27,5 +27,5 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Printf("%v %#v", *Interactive, cfg)
+	fmt.Printf("%#v", cfg)
 }
