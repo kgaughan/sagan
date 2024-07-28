@@ -28,7 +28,7 @@ func TestTopologicalSort(t *testing.T) {
 		t.Errorf("unexpected error: %v", err)
 	}
 
-	// As maps in Go are a little probabalistic in their ordering, even with
+	// As maps in Go are non-deterministic in their ordering, even with
 	// as keys, we can't just compare the result to a static list. Instead, we
 	// check that each of the vertices comes earlier than the connected vertices.
 	for i, v := range result {
