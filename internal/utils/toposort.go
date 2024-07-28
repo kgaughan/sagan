@@ -1,0 +1,49 @@
+package utils
+
+// TopologicalSort takes a map representing a DAG and linearises the DAG based
+// the connected vertices (given in the values of the associated list).
+//
+// The resulting list can be consumed from the end as the last element will
+// have no other dependencies.
+//
+// Taken (with naming changes) from
+// https://tylercipriani.com/blog/2017/09/13/topographical-sorting-in-golang/
+func TopologicalSort[K comparable](graph map[K][]K) []K {
+	result := []K{}
+
+	inDegree := map[K]int{}
+	for n := range graph {
+		inDegree[n] = 0
+	}
+
+	for _, adjacent := range graph {
+		for _, v := range adjacent {
+			inDegree[v]++
+		}
+	}
+
+	next := []K{}
+	for u, v := range inDegree {
+		if v != 0 {
+			continue
+		}
+
+		next = append(next, u)
+	}
+
+	for len(next) > 0 {
+		u := next[0]
+		next = next[1:]
+
+		result = append(result, u)
+
+		for _, v := range graph[u] {
+			inDegree[v]--
+			if inDegree[v] == 0 {
+				next = append(next, v)
+			}
+		}
+	}
+
+	return result
+}
