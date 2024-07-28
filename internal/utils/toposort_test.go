@@ -22,7 +22,10 @@ func TestTopologicalSort(t *testing.T) {
 		14: {},
 	}
 
-	result := TopologicalSort(vertices)
+	result, err := TopologicalSort(vertices)
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
 
 	// As maps in Go are a little probabalistic in their ordering, even with
 	// as keys, we can't just compare the result to a static list. Instead, we
@@ -40,5 +43,19 @@ func TestTopologicalSort(t *testing.T) {
 				t.Errorf("For %v, dependency %v was not found later in the list; result: %v", i, connected, result)
 			}
 		}
+	}
+}
+
+func TestForGraphCycle(t *testing.T) {
+	vertices := map[int][]int{
+		1: {2, 3},
+		2: {},
+		3: {2, 1},
+	}
+
+	if result, err := TopologicalSort(vertices); err == nil {
+		t.Errorf("expected error, got %v", result)
+	} else if err != ErrCycleDetected {
+		t.Errorf("expected ErrCycleDetected, got %v", err)
 	}
 }

@@ -1,16 +1,18 @@
 package utils
 
+import "errors"
+
+var ErrCycleDetected = errors.New("detected cycle in DAG")
+
 // TopologicalSort takes a map representing a DAG and linearises the DAG based
 // the connected vertices (given in the values of the associated list).
 //
 // The resulting list can be consumed from the end as the last element will
 // have no other dependencies.
 //
-// Note that this has no cycle detection!
-//
 // Taken (with naming changes) from
 // https://tylercipriani.com/blog/2017/09/13/topographical-sorting-in-golang/
-func TopologicalSort[K comparable](graph map[K][]K) []K {
+func TopologicalSort[K comparable](graph map[K][]K) ([]K, error) {
 	result := []K{}
 
 	// inDegress keeps track of the number of incoming edges
@@ -48,5 +50,10 @@ func TopologicalSort[K comparable](graph map[K][]K) []K {
 		}
 	}
 
-	return result
+	// We can detect if there are fewer elements in the result than in the graph
+	if len(result) < len(graph) {
+		return []K{}, ErrCycleDetected
+	}
+
+	return result, nil
 }
