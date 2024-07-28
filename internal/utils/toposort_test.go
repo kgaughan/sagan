@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"errors"
 	"testing"
 )
 
@@ -55,7 +56,7 @@ func TestForGraphCycle(t *testing.T) {
 
 	if result, err := TopologicalSort(vertices); err == nil {
 		t.Errorf("expected error, got %v", result)
-	} else if err != ErrCycleDetected {
+	} else if !errors.Is(err, ErrCycleDetected) {
 		t.Errorf("expected ErrCycleDetected, got %v", err)
 	}
 }
