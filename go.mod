@@ -1,8 +1,8 @@
 module github.com/kgaughan/sagan
 
-go 1.20
+go 1.24
 
 require (
-	github.com/spf13/pflag v1.0.7
+	github.com/spf13/pflag v1.0.10
 	gopkg.in/yaml.v3 v3.0.1
 )
