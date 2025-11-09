@@ -3,17 +3,28 @@ NAME:=sagan
 SOURCE:=$(wildcard internal/*.go internal/*/*.go cmd/*/*.go)
 DOCS:=$(wildcard docs/*.md mkdocs.yml)
 
-build: go.mod $(NAME)
+.PHONY: help
+help: ## Show this help message
+	@echo "Usage: make [target]"
+	@echo ""
+	@echo "Targets:"
+	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST) | sort
 
-tidy: go.mod fmt
+.PHONY: build
+build: go.mod $(NAME) ## Build the sagan binary
 
-clean:
-	rm -rf $(NAME) dist site
+.PHONY: tidy
+tidy: go.mod fmt ## Tidy go.mod and format the code
+
+.PHONY: clean
+clean: ## Clean build artifacts
+	rm -rf $(NAME) dist site .venv coverage.out coverage.html
 
 $(NAME): $(SOURCE) go.sum
-	CGO_ENABLED=0 go build -tags netgo -trimpath -ldflags '-s -w' -o $(NAME) ./cmd/$(NAME)
+	CGO_ENABLED=0 go build -v -tags netgo -trimpath -ldflags '-s -w' -o $@ ./cmd/$@
 
-update:
+.PHONY: update
+update: ## Update dependencies
 	go get -u ./...
 	go mod tidy
 
@@ -24,28 +35,40 @@ go.sum: go.mod
 go.mod: $(SOURCE)
 	go mod tidy
 
-fmt:
+.PHONY: fmt
+fmt: ## Format the code
 	go fmt ./...
 
-lint:
+.PHONY: lint
+lint: ## Lint the code
 	go vet ./...
+	golangci-lint run ./...
 
-serve-docs: .venv
-	.venv/bin/mkdocs serve
+.PHONY: serve-docs
+serve-docs: .venv ## Serve the documentation locally
+	uv run mkdocs serve
 
-docs: .venv $(DOCS)
-	.venv/bin/mkdocs build
+.PHONY: docs
+docs: .venv $(DOCS) ## Build the documentation site
+	uv run mkdocs build
 
 .venv: requirements.txt
 	uv venv
 	uv pip install -r requirements.txt
 
-requirements.txt: requirements.in
-	uv pip compile $< > $@
+%.txt: %.in
+	uv pip compile $< -o $@
 
-tests:
-	go test -cover ./...
+.PHONY: tests
+tests: ## Run the tests
+	go test -cover -coverprofile=coverage.out -v ./...
 
-.DEFAULT: build
+coverage.out: tests
 
-.PHONY: build clean tidy update fmt lint docs tests serve-docs
+.PHONY: coverage-html
+coverage-html: coverage.out ## Generate HTML report from coverage data
+	go tool cover -html=coverage.out -o coverage.html
+
+.PHONY: test-release
+test-release: ## Run `goreleaser release` without publishing anything
+	goreleaser release --auto-snapshot --clean --skip docker --skip publish
