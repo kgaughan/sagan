@@ -8,7 +8,10 @@ on:
       - main
     tags-ignore:
       - "*"
-  pull_request: {}
+  pull_request:
+    branches:
+      - main
+      - master
 
 permissions:
   contents: read

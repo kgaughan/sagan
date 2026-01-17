@@ -43,6 +43,7 @@ type Workflow struct {
 // can trigger other projects to be implicitly re-executed.
 type Project struct {
 	Path       string    `yaml:"path"`
+	Name       string    `yaml:"name"`
 	Workflow   string    `yaml:"workflow"`
 	Requires   []string  `yaml:"requires,omitempty"`
 	Helpers    []string  `yaml:"helpers,omitempty"`

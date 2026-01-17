@@ -17,6 +17,7 @@ A _project_ is a directory full of configuration, typically Terraform configurat
 ```yaml
 ---
 version: "1.0"
+
 helpers:
   sshuttle:
     # Helpers of type 'daemon' persist until they are no longer needed. The
@@ -49,6 +50,7 @@ helpers:
         save_as: instance_id
       - cmd: aws ssm start-session --target $instance_id
       - cmd: sshuttle --ssh-cmd="ssh -o ProxyCommand='aws ssm start-session --target %h --document-name AWS-StartSSHSession --parameters portNumber=22'" --remote ec2-user@$instance_id $cidr
+
   vault:
     # A one-shot helper that may prompt for input.
     type: interactive
@@ -64,13 +66,14 @@ helpers:
     # If this command will need to be re-executed after a while, how long
     # should the result be valid for?
     ttl: 2h
+
 workflows:
   default:
     temporaries:
       - name: plan
         type: file
     load:
-      # This is basically the default behaviour i nothing
+      # This is basically the default behaviour
       - "*.auto.tfvars.json"
       - "terraform.tfvars.json"
     init:
@@ -90,6 +93,7 @@ workflows:
         "$plan": plan
       run:
         - cmd: terraform apply $plan
+
 projects:
   # Every project has a path. The last element in the path is used as the
   # default project name.
@@ -101,6 +105,7 @@ projects:
     helpers:
       # Will implicitly run the 'sshuttle' helper too.
       - vault
+
   - path: barney
     workflow: default
     # When rolling out this set of projects, 'frederick' must be deployed
@@ -118,8 +123,10 @@ projects:
         action: replace
         # The name of the field to overwrite.
         name: thingy
+
   - path: betty
     workflow: default
+
   - path: bamm-bamm
     requires:
       - betty

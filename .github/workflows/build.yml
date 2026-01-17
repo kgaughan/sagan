@@ -8,7 +8,10 @@ on:
       - main
     tags-ignore:
       - "*"
-  pull_request: {}
+  pull_request:
+    branches:
+      - main
+      - master
 
 permissions:
   contents: read
@@ -40,8 +43,10 @@ jobs:
 
       - if: steps.changes.outputs.src == 'true'
         name: Run tests
-        run: make tests
+        run: go test -v ./...
 
       - if: steps.changes.outputs.src == 'true'
         name: Build
-        run: make build
+        env:
+          GO_ENABLED: 0
+        run: go build -v -tags netgo -trimpath -ldflags '-s -w' ./cmd/sagan
