@@ -11,7 +11,8 @@ import (
 
 var (
 	ConfigPath   = flag.StringP("config", "c", "./sagan.yaml", "path to configuration file")
-	Interactive  = flag.BoolP("interactive", "i", false, "run in interactive mode")
+	Workers      = flag.IntP("workers", "w", 1, "number of concurrent workers")
+	DryRun       = flag.BoolP("dry-run", "n", false, "print commands without executing them")
 	PrintVersion = flag.BoolP("version", "V", false, "print version and exit")
 	ShowHelp     = flag.BoolP("help", "h", false, "show help")
 )

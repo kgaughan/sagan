@@ -13,11 +13,11 @@ linters:
     - govet
     - ineffassign
     - nonamedreturns
-    - revive
     - staticcheck
     - tparallel
     - unconvert
     - unused
+    - usetesting
     - whitespace
     - wrapcheck
   exclusions:

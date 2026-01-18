@@ -1,10 +1,10 @@
-package utils
+package toposort
 
 import "errors"
 
 var ErrCycleDetected = errors.New("detected cycle in DAG")
 
-// TopologicalSort takes a map representing a DAG and linearises the DAG based
+// TopologicalSort takes a map representing a DAG and linearizes the DAG based
 // the connected vertices (given in the values of the associated list).
 //
 // The resulting list can be consumed from the end as the last element will
