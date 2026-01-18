@@ -6,23 +6,23 @@ Behind the scenes, it can manage tunnels, the automatic generation of credential
 
 ## Configuration file format
 
-A Sagan configuration file is a YAML file that contains _helpers_, _workflows_, and _projects_.
+A Sagan configuration file is a YAML file that contains _helpers_, _workflows_, and _tasks_.
 
 A _helper_ is a task that runs at the start and end of a workflow. This can be a script that manages a tunnel, fetches some credentials to be used as part of a workflow, or any number of other tasks.
 
-A _workflow_ is a list of commands that implements the various deployment phases of a project. In Terraform, this would be initialising a project, planning it, applying it, and cleanup.
+A _workflow_ is a list of commands that implements the various deployment phases of a task. In Terraform, this would be initialising a project, planning it, applying it, and cleanup.
 
-A _project_ is a directory full of configuration, typically Terraform configuration, that a workflow describes how to manage.
+A _task_ is a directory full of configuration, typically a Terraform project, that a workflow describes how to manage.
 
 ```yaml
 ---
 version: "1.0"
 
 helpers:
-  sshuttle:
+  tunnel:
     # Helpers of type 'daemon' persist until they are no longer needed. The
     # duration of their persistence is decided by the values of the arguments
-    # they expect. As long as there is at least one project that expects an
+    # they expect. As long as there is at least one task that expects an
     # instance of the helper with a particular set of arguments, the helper
     # will keep running.
     type: daemon
@@ -57,7 +57,7 @@ helpers:
     # Is there a helper that needs to be running before this helper can be
     # used?
     requires:
-      - sshuttle
+      - tunnel
     args:
       - name: environment
     run:
@@ -94,29 +94,29 @@ workflows:
       run:
         - cmd: terraform apply $plan
 
-projects:
-  # Every project has a path. The last element in the path is used as the
-  # default project name.
+task:
+  # Every task has a path. The last element in the path is used as the
+  # default task name.
   - path: fred
-    # If you want to override the project name, you do it with 'name'
+    # If you want to override the task name, you do it with 'name'
     name: frederick
     # The workflow to use.
     workflow: default
     helpers:
-      # Will implicitly run the 'sshuttle' helper too.
+      # Will implicitly run the 'tunnel' helper too.
       - vault
 
   - path: barney
     workflow: default
-    # When rolling out this set of projects, 'frederick' must be deployed
+    # When rolling out this set of tasks, 'frederick' must be deployed
     # before 'barney'
     requires:
       - frederick
     helpers:
-      # This project doesn't require Vault, but it does require a tunnel.
-      - sshuttle
-    # We want to save some of this project's outputs to a configuration
-    # file for the 'bamm-bamm' project.
+      # This task doesn't require Vault, but it does require a tunnel.
+      - tunnel
+    # We want to save some of this task's outputs to a configuration
+    # file for the 'bamm-bamm' task.
     outputs:
       - write: ../bamm-bamm/terraform.tfvars.json
         # Overwrite the value of the field. Other actions are 'add'.
@@ -131,7 +131,7 @@ projects:
     requires:
       - betty
     # This creates an indirect dependency on 'barney': if the field 'thingy'
-    # in the named file changes, this project should be redeployed.
+    # in the named file changes, this task should be redeployed.
     redeploy_on:
       - file: terraform.tfvars.json
         name: thingy

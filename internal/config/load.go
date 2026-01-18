@@ -4,95 +4,17 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"time"
 
+	"github.com/kgaughan/sagan/internal/model"
 	"gopkg.in/yaml.v3"
 )
 
 // Config represents the root configuration object.
 type Config struct {
-	Version   string              `yaml:"version"`
-	Helpers   map[string]Helper   `yaml:"helpers,omitempty"`
-	Workflows map[string]Workflow `yaml:"workflows"`
-	Projects  []Project           `yaml:"projects"`
-}
-
-// Helper represents a set of command executed to do things such as manage a
-// tunnel, fetch credentials, &c., needed by the workflows.
-type Helper struct {
-	Type     string        `yaml:"type"`
-	Requires []string      `yaml:"requires,omitempty"`
-	Args     []Argument    `yaml:"args,omitempty"`
-	Commands []Command     `yaml:"run"`
-	Duration time.Duration `yaml:"ttl,omitempty"`
-}
-
-// Workflow represents a series of build stages with dependencies between them.
-//
-// Stages must specify their order via dependencies and will be sorted using a
-// topological sort to figure out their execution and finalization order.
-type Workflow struct {
-	Temporaries []Temporary      `yaml:"temporaries,omitempty"`
-	Sources     []string         `yaml:"load,omitempty"`
-	Stages      map[string]Stage `yaml:",inline"`
-}
-
-// Project represents something on which a workflow operates.
-//
-// It can be dependent on another project having run and runs of this project
-// can trigger other projects to be implicitly re-executed.
-type Project struct {
-	Path       string    `yaml:"path"`
-	Name       string    `yaml:"name"`
-	Workflow   string    `yaml:"workflow"`
-	Requires   []string  `yaml:"requires,omitempty"`
-	Helpers    []string  `yaml:"helpers,omitempty"`
-	Outputs    []Output  `yaml:"outputs,omitempty"`
-	RedeployOn []Trigger `yaml:"redeploy_on,omitempty"`
-}
-
-// Argument represents some value that a helper expects to be available.
-type Argument struct {
-	Name      string `yaml:"name"`
-	Default   string `yaml:"default,omitempty"`
-	Exclusive bool   `yaml:"exclusive"`
-	Variable  string `yaml:"env,omitempty"`
-}
-
-// Command represents a command to be executed.
-type Command struct {
-	Command string `yaml:"cmd"`
-	SaveAs  string `yaml:"save_as,omitempty"`
-}
-
-// Stage represents a series of commands to be executed followed by some
-// commands to do cleanup afterwards.
-type Stage struct {
-	Requires map[string]string `yaml:"requires,omitempty"`
-	Run      []Command         `yaml:"run,omitempty"`
-	Finalize []Command         `yaml:"finalize,omitempty"`
-}
-
-// Temporary represents a temporary object of some kind, e.g., a file.
-type Temporary struct {
-	Name string `yaml:"name"`
-	Type string `yaml:"type"`
-}
-
-// Output represents something to be written to a configuration file upon the
-// completion of a project run. Changes in values may trigger the implicit
-// re-execution of projects.
-type Output struct {
-	Path   string `yaml:"path"`
-	Action string `yaml:"action"`
-	Field  string `yaml:"field,omitempty"`
-}
-
-// Trigger represents a configuration update that will lead to a project being
-// re-executed.
-type Trigger struct {
-	Path  string `yaml:"path"`
-	Field string `yaml:"field"`
+	Version   string                     `yaml:"version"`
+	Helpers   map[string]*model.Helper   `yaml:"helpers,omitempty"`
+	Workflows map[string]*model.Workflow `yaml:"workflows"`
+	Tasks     []*model.Task              `yaml:"tasks"`
 }
 
 // Load loads configuration from a YAML file at a given path.
@@ -108,5 +30,74 @@ func (c *Config) Load(path string) error {
 	} else if err := yaml.Unmarshal(content, c); err != nil {
 		return fmt.Errorf("could not parse configuration: %w", err)
 	}
+
+	c.normalize()
 	return nil
+}
+
+func (c *Config) normalize() {
+	for _, p := range c.Tasks {
+		p.Normalize()
+	}
+}
+
+// ValidateConfig performs basic sanity checks on the configuration.
+// It verifies that every task references an existing workflow and that
+// every declared requirement refers to a known task name (derived from
+// the task's path).
+func (c *Config) Validate() error {
+	// workflows presence
+	for _, p := range c.Tasks {
+		if _, ok := c.Workflows[p.Workflow]; !ok {
+			return fmt.Errorf("task %q references unknown workflow %q", p.Path, p.Workflow)
+		}
+	}
+
+	// build name map for requires validation
+	names := map[string]struct{}{}
+	for _, t := range c.Tasks {
+		names[t.Name] = struct{}{}
+	}
+	for i, t := range c.Tasks {
+		if t.Name == "" {
+			return fmt.Errorf("task #%v has no name", i+1)
+		}
+		for _, req := range t.Requires {
+			if _, ok := names[req]; !ok {
+				return fmt.Errorf("task %q requires unknown task %q", t.Path, req)
+			}
+		}
+	}
+
+	return nil
+}
+
+// BuildDependencyGraph constructs a graph suitable for TopologicalSort.
+// The graph maps a node to the list of nodes that depend on it (edges
+// are dependency -> dependent). It also returns a map of task names to
+// tasks.
+func (c Config) BuildDependencyGraph() (map[string][]string, map[string]*model.Task) {
+	tasks := map[string]*model.Task{}
+	for _, t := range c.Tasks {
+		tasks[t.Name] = t
+	}
+
+	graph := map[string][]string{}
+	// ensure every task appears in the graph
+	for name := range tasks {
+		graph[name] = []string{}
+	}
+
+	// add edges from requirement -> dependent
+	for name, t := range tasks {
+		for _, req := range t.Requires {
+			// if the requirement isn't a known task, still create the node
+			if _, ok := graph[req]; !ok {
+				graph[req] = []string{}
+			}
+			graph[req] = append(graph[req], name)
+		}
+	}
+
+	return graph, tasks
 }
