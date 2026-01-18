@@ -2,9 +2,12 @@ package orchestration
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 )
+
+var ErrPossibleCycleDetected = errors.New("possible cycle detected")
 
 // Scheduler enqueues and runs tasks when their declared dependencies are
 // satisfied. It doesn't know how to execute a task's workflow: an executor
@@ -172,9 +175,10 @@ func (s *Scheduler) Run(ctx context.Context, nWorkers int, exec func(string) err
 
 	// if not all tasks completed, there may be a cycle. If this ever happens,
 	// we've a bug as the topological sort we do at the beginning ought to
-	// find these.
+	// find these, but that should only be the case if everything that's run
+	// has succeeded.
 	if len(completed) < s.total {
-		return completed, fmt.Errorf("not all tasks completed: %d/%d", len(completed), s.total)
+		return completed, fmt.Errorf("not all tasks completed (%d/%d): %w", len(completed), s.total, ErrPossibleCycleDetected)
 	}
 
 	return completed, nil

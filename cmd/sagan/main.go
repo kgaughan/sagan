@@ -6,10 +6,11 @@ import (
 	"os"
 	"sync"
 
+	"github.com/kgaughan/sagan/internal/common"
 	"github.com/kgaughan/sagan/internal/config"
 	"github.com/kgaughan/sagan/internal/logging"
 	"github.com/kgaughan/sagan/internal/orchestration"
-	"github.com/kgaughan/sagan/internal/utils"
+	"github.com/kgaughan/sagan/internal/toposort"
 	"github.com/kgaughan/sagan/internal/version"
 	flag "github.com/spf13/pflag"
 )
@@ -44,14 +45,26 @@ func main() {
 	}
 
 	// linearize to check for cycles
-	_, err := utils.TopologicalSort(graph)
+	_, err := toposort.TopologicalSort(graph)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 
-	sched := orchestration.NewScheduler(graph)
 	ctx := context.Background()
+
+	logCh := make(chan logging.TaskLog, 512)
+	go func() {
+		for {
+			log, ok := <-logCh
+			if !ok {
+				break
+			}
+			fmt.Printf("%v: %v\n", log.Task, log.Line)
+		}
+	}()
+
+	sched := orchestration.NewScheduler(graph)
 
 	statuses := map[string]string{}
 	for k := range tasks {
@@ -60,43 +73,33 @@ func main() {
 
 	env := map[string]string{}
 	var envMu sync.Mutex
-
-	logCh := make(chan logging.TaskLog, 512)
-
-	go func() {
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			case log, ok := <-logCh:
-				if !ok {
-					return
-				}
-				fmt.Printf("%v: %v\n", log.Task, log.Line)
-			}
-		}
-	}()
+	var statusMu sync.Mutex
 
 	_, err = sched.Run(ctx, *Workers, func(name string) error {
 		t, ok := tasks[name]
 		if !ok {
-			return fmt.Errorf("unknown task: %v", name)
+			return fmt.Errorf("%v: %w", name, common.ErrUnknownTask)
 		}
 
 		// update UI: mark task running
+		statusMu.Lock()
 		statuses[name] = "running"
+		statusMu.Unlock()
 
 		// run the task
 		if err := t.Execute(ctx, cfg.Workflows, *DryRun, env, &envMu, logCh); err != nil {
+			statusMu.Lock()
 			statuses[name] = "failed"
-			return err
+			statusMu.Unlock()
+			return err // nolint:wrapcheck
 		}
 
+		statusMu.Lock()
 		statuses[name] = "done"
+		statusMu.Unlock()
 
 		return nil
 	})
-	ctx.Done()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)

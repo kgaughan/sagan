@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 
+	"github.com/kgaughan/sagan/internal/common"
 	"github.com/kgaughan/sagan/internal/model"
 	"gopkg.in/yaml.v3"
 )
@@ -49,7 +50,7 @@ func (c *Config) Validate() error {
 	// workflows presence
 	for _, p := range c.Tasks {
 		if _, ok := c.Workflows[p.Workflow]; !ok {
-			return fmt.Errorf("task %q references unknown workflow %q", p.Path, p.Workflow)
+			return fmt.Errorf("task %q references %q: %w", p.Path, p.Workflow, common.ErrUnknownWorkflow)
 		}
 	}
 
@@ -60,11 +61,11 @@ func (c *Config) Validate() error {
 	}
 	for i, t := range c.Tasks {
 		if t.Name == "" {
-			return fmt.Errorf("task #%v has no name", i+1)
+			return fmt.Errorf("task #%v has no name", i+1) // nolint:err113
 		}
 		for _, req := range t.Requires {
 			if _, ok := names[req]; !ok {
-				return fmt.Errorf("task %q requires unknown task %q", t.Path, req)
+				return fmt.Errorf("task %q requires %q: %w", t.Path, req, common.ErrUnknownTask)
 			}
 		}
 	}

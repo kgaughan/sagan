@@ -3,6 +3,7 @@ package model
 import (
 	"bytes"
 	"context"
+	"io"
 	"maps"
 	"os"
 	"os/exec"
@@ -33,7 +34,9 @@ func (c Command) Run(ctx context.Context, workdir string, dryRun bool, env map[s
 		}
 		return nil
 	}
-	cmd := exec.CommandContext(ctx, shell, arg, c.Command)
+	// gosec freaks out about this, but it's 100% intentional. The whole point
+	// of this is to run arbitrary commands.
+	cmd := exec.CommandContext(ctx, shell, arg, c.Command) // #nosec: G204
 	if workdir != "" {
 		cmd.Dir = workdir
 	}
@@ -48,7 +51,9 @@ func (c Command) Run(ctx context.Context, workdir string, dryRun bool, env map[s
 			envMap[parts[0]] = parts[1]
 		}
 	}
+	envMu.Lock()
 	maps.Copy(envMap, env)
+	envMu.Unlock()
 	finalEnv := []string{}
 	for k, v := range envMap {
 		finalEnv = append(finalEnv, k+"="+v)
@@ -58,74 +63,24 @@ func (c Command) Run(ctx context.Context, workdir string, dryRun bool, env map[s
 	// Prepare pipes to stream output
 	stdoutPipe, err := cmd.StdoutPipe()
 	if err != nil {
-		return err
+		return err // nolint:wrapcheck
 	}
 	stderrPipe, err := cmd.StderrPipe()
 	if err != nil {
-		return err
+		return err // nolint:wrapcheck
 	}
-
-	var capture bytes.Buffer
 
 	if err := cmd.Start(); err != nil {
-		return err
+		return err // nolint:wrapcheck
 	}
 
-	// stream stdout
-	go func() {
-		buf := make([]byte, 1024)
-		for {
-			n, err := stdoutPipe.Read(buf)
-			if n > 0 {
-				chunk := string(buf[:n])
-				capture.WriteString(chunk)
-				// send each line if logCh is present
-				if logCh != nil {
-					lines := strings.Split(chunk, "\n")
-					for i, l := range lines {
-						if i == len(lines)-1 && l == "" {
-							continue
-						}
-						logCh <- logging.TaskLog{Task: taskName, Line: l}
-					}
-				} else {
-					os.Stdout.Write([]byte(chunk))
-				}
-			}
-			if err != nil {
-				break
-			}
-		}
-	}()
-
-	// stream stderr
-	go func() {
-		buf := make([]byte, 1024)
-		for {
-			n, err := stderrPipe.Read(buf)
-			if n > 0 {
-				chunk := string(buf[:n])
-				capture.WriteString(chunk)
-				if logCh != nil {
-					lines := strings.Split(chunk, "\n")
-					for i, l := range lines {
-						if i == len(lines)-1 && l == "" {
-							continue
-						}
-						logCh <- logging.TaskLog{Task: taskName, Line: l}
-					}
-				} else {
-					os.Stderr.Write([]byte(chunk))
-				}
-			}
-			if err != nil {
-				break
-			}
-		}
-	}()
+	var captureMu sync.Mutex
+	var capture bytes.Buffer
+	go captureStream(stdoutPipe, &captureMu, capture, logCh, taskName)
+	go captureStream(stderrPipe, &captureMu, capture, logCh, taskName)
 
 	if err := cmd.Wait(); err != nil {
-		return err
+		return err // nolint:wrapcheck
 	}
 
 	if c.SaveAs != "" {
@@ -137,4 +92,31 @@ func (c Command) Run(ctx context.Context, workdir string, dryRun bool, env map[s
 	}
 
 	return nil
+}
+
+func captureStream(stream io.ReadCloser, captureMu *sync.Mutex, capture bytes.Buffer, logCh chan<- logging.TaskLog, taskName string) {
+	buf := make([]byte, 1024)
+	for {
+		n, err := stream.Read(buf)
+		if n > 0 {
+			chunk := string(buf[:n])
+			captureMu.Lock()
+			capture.WriteString(chunk)
+			captureMu.Unlock()
+			if logCh != nil {
+				lines := strings.Split(chunk, "\n")
+				for i, l := range lines {
+					if i == len(lines)-1 && l == "" {
+						continue
+					}
+					logCh <- logging.TaskLog{Task: taskName, Line: l}
+				}
+			} else {
+				os.Stderr.Write([]byte(chunk))
+			}
+		}
+		if err != nil {
+			break
+		}
+	}
 }

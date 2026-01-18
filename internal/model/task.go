@@ -6,8 +6,9 @@ import (
 	"path/filepath"
 	"sync"
 
+	"github.com/kgaughan/sagan/internal/common"
 	"github.com/kgaughan/sagan/internal/logging"
-	"github.com/kgaughan/sagan/internal/utils"
+	"github.com/kgaughan/sagan/internal/toposort"
 )
 
 // Task represents something on which a workflow operates.
@@ -44,7 +45,7 @@ func (t *Task) Normalize() {
 func (t Task) Execute(ctx context.Context, workflows map[string]*Workflow, dryRun bool, env map[string]string, envMu *sync.Mutex, logCh chan<- logging.TaskLog) error {
 	wf, ok := workflows[t.Workflow]
 	if !ok {
-		return fmt.Errorf("workflow %q not found", t.Workflow)
+		return fmt.Errorf("%q: %w", t.Workflow, common.ErrUnknownWorkflow)
 	}
 
 	// build stage graph: dependency -> dependents
@@ -63,7 +64,7 @@ func (t Task) Execute(ctx context.Context, workflows map[string]*Workflow, dryRu
 		}
 	}
 
-	order, err := utils.TopologicalSort(stageGraph)
+	order, err := toposort.TopologicalSort(stageGraph)
 	if err != nil {
 		return fmt.Errorf("could not sort stages for task %v: %w", t.Path, err)
 	}

@@ -94,7 +94,7 @@ workflows:
       run:
         - cmd: terraform apply $plan
 
-task:
+tasks:
   # Every task has a path. The last element in the path is used as the
   # default task name.
   - path: fred
