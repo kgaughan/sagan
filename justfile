@@ -45,6 +45,7 @@ docs:
 		--toc-depth 2 \
 		--chunk-template "%i.html" \
 		--template docs/template.html \
+		--highlight-style docs/solarizeddark.theme \
 		--output "site"
 
 # run the test suite
