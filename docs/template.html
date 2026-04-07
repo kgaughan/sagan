@@ -23,6 +23,9 @@ $endif$
   <style type="text/css">
     $styles.css()$
   </style>
+$for(css)$
+  <link rel="stylesheet" href="$css$">
+$endfor$
 </head>
 <body>
 
@@ -35,19 +38,8 @@ $endif$
 $if(top)$
   $-- only print title block if this is NOT the top page
 $else$
-  $if(title)$
-    <header id="title-block-header">
-    <h1 class="title">$title$</h1>
-    $for(author)$<p class="author">$author$</p>$endfor$
-    $if(date)$<p class="date">$date$</p>$endif$
-    $if(abstract)$
-      <div class="abstract">
-        <div class="abstract-title">$abstract-title$</div>
-      $abstract$
-      </div>
-    $endif$
-    </header>
-  $endif$
+  $if(title)$<h1>$title$</h1>$endif$
+  $if(abstract)$$abstract$$endif$
 $endif$
 
 $body$
@@ -55,19 +47,21 @@ $body$
 
 <div class="nav-outer">
 <nav id="sitenav">
+  $if(previous.url)$
   <div class="nav-prev">
-    $if(previous.url)$
-	<strong>Previous</strong><br>
     <a href="$previous.url$" accesskey="p" rel="previous">$previous.title$</a>
-    $endif$
   </div>
+  $else$
+  <div></div>
+  $endif$
 
+  $if(next.url)$
   <div class="nav-next">
-    $if(next.url)$
-	<strong>Next</strong><br>
     <a href="$next.url$" accesskey="n" rel="next">$next.title$</a>
-    $endif$
   </div>
+  $else$
+  <div></div>
+  $endif$
 </nav>
 </div>
 
