@@ -1,0 +1,87 @@
+body {
+  background: #1C2833;
+  color: #AAB7B8;
+  font-family: "Open Sans", sans-serif;
+  line-height: 1.4;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: row;
+  height: 100vh;
+}
+
+nav a {
+  color: #AAB7B8;
+  text-decoration: none;
+}
+nav a:hover {
+  text-decoration: underline;
+}
+
+nav#toc {
+  flex: 1 auto;
+  min-width: 16rem;
+  width: 16rem;
+  overflow-y: auto;
+  background: #2E4053;
+  padding: 1rem;
+  border-right: 1px solid #496684;
+}
+nav#toc ul {
+  list-style: none outside;
+  margin: 0 0 1rem 0;
+  padding: 0;
+}
+nav#toc li {
+  margin: 0;
+  padding: 0;
+}
+nav#toc ul ul li {
+  padding-left: 1rem;
+}
+nav#toc > ul > li > a {
+  font-weight: bold;
+}
+
+#content {
+  flex: 1 100%;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+main {
+  margin: 0 auto;
+  max-width: 55rem;
+  width: stretch;
+  padding: 1rem;
+  flex: 1 100%;
+}
+main a {
+  color: #F4F6F6;
+}
+
+.nav-outer {
+  border-top: 1px solid #496684;
+  flex: 1 auto;
+  background: #2E4053;
+}
+
+nav#sitenav {
+  margin: 0 auto;
+  max-width: 55rem;
+  display: flex;
+  flex-direction: row;
+}
+nav#sitenav > * {
+  flex: 1 100%;
+  max-width: 28rem;
+  padding: 1rem;
+}
+
+.nav-prev {
+  text-align: left;
+}
+.nav-next {
+  text-align: right;
+}

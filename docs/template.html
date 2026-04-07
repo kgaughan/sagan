@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="$lang$"$if(dir)$ dir="$dir$"$endif$>
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="pandoc">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+$for(author-meta)$
+  <meta name="author" content="$author-meta$">
+$endfor$
+$if(date-meta)$
+  <meta name="dcterms.date" content="$date-meta$">
+$endif$
+$if(keywords)$
+  <meta name="keywords" content="$for(keywords)$$keywords$$sep$, $endfor$">
+$endif$
+$if(description-meta)$
+  <meta name="description" content="$description-meta$">
+$endif$
+  <title>$pagetitle$</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
+  <style type="text/css">
+    $styles.css()$
+  </style>
+</head>
+<body>
+
+<nav id="toc" role="doc-toc" data-pagefind-ignore>
+  $table-of-contents$
+</nav>
+
+<div id="content">
+<main>
+$if(top)$
+  $-- only print title block if this is NOT the top page
+$else$
+  $if(title)$
+    <header id="title-block-header">
+    <h1 class="title">$title$</h1>
+    $for(author)$<p class="author">$author$</p>$endfor$
+    $if(date)$<p class="date">$date$</p>$endif$
+    $if(abstract)$
+      <div class="abstract">
+        <div class="abstract-title">$abstract-title$</div>
+      $abstract$
+      </div>
+    $endif$
+    </header>
+  $endif$
+$endif$
+
+$body$
+</main>
+
+<div class="nav-outer">
+<nav id="sitenav">
+  <div class="nav-prev">
+    $if(previous.url)$
+	<strong>Previous</strong><br>
+    <a href="$previous.url$" accesskey="p" rel="previous">$previous.title$</a>
+    $endif$
+  </div>
+
+  <div class="nav-next">
+    $if(next.url)$
+	<strong>Next</strong><br>
+    <a href="$next.url$" accesskey="n" rel="next">$next.title$</a>
+    $endif$
+  </div>
+</nav>
+</div>
+
+</div>
+
+</body>
+</html>

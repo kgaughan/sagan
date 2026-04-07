@@ -1,10 +1,22 @@
-# Sagan
+---
+title: Sagan
+author: Keith Gaughan
+date: 2026-04-06
+lang: en
+abstract: |
+  Sagan is a tool for helping run collections of Terraform projects. It aims
+  to make the deployment and management of multiple projects significantly
+  easier and faster. It's intended to supplement tools like
+  [Atlantis](https://www.runatlantis.io/), especially in circumstances where
+  they may not be feasible to use, such as when initially deploying a set of
+  modules when doing an initial buildout.
 
-Sagan is a tool for helping run collections of Terraform projects. It aims to make the deployment and management of multiple projects significantly easier and faster. It's intended to supplement tools like [Atlantis](https://www.runatlantis.io/), especially in circumstances where they may not be feasible to use, such as when initially deploying a set of modules when doing an initial buildout.
+  Behind the scenes, it can manage tunnels, the automatic generation of
+  credentials, &c. It also supports dependencies, rebuilds based on updates,
+  and parallelism.
+---
 
-Behind the scenes, it can manage tunnels, the automatic generation of credentials, &c. It also supports dependencies, rebuilds based on updates, and parallelism.
-
-## Configuration file format
+# Configuration file format
 
 A Sagan configuration file is a YAML file that contains _helpers_, _workflows_, and _tasks_.
 
@@ -13,6 +25,8 @@ A _helper_ is a task that runs at the start and end of a workflow. This can be a
 A _workflow_ is a list of commands that implements the various deployment phases of a task. In Terraform, this would be initialising a project, planning it, applying it, and cleanup.
 
 A _task_ is a directory full of configuration, typically a Terraform project, that a workflow describes how to manage.
+
+## Example
 
 ```yaml
 ---
@@ -46,10 +60,17 @@ helpers:
     # Only the last command is kept running in the backgroun until it exits.
     # By default, it will send a SIGTERM to the last command upon shutdown.
     run:
-      - cmd: aws ec2 describe-instances --filter "Name=tag:Env,Values=$environment" "Name=tag:Role,Values=bastion" --query "Reservations[].Instances[].InstanceId | [0]" --output text
+      - cmd: >
+          aws ec2 describe-instances
+            --filter "Name=tag:Env,Values=$environment" "Name=tag:Role,Values=bastion"
+            --query "Reservations[].Instances[].InstanceId | [0]"
+            --output text
         save_as: instance_id
       - cmd: aws ssm start-session --target $instance_id
-      - cmd: sshuttle --ssh-cmd="ssh -o ProxyCommand='aws ssm start-session --target %h --document-name AWS-StartSSHSession --parameters portNumber=22'" --remote ec2-user@$instance_id $cidr
+      - cmd: >
+          sshuttle
+            --ssh-cmd="ssh -o ProxyCommand='aws ssm start-session --target %h --document-name AWS-StartSSHSession --parameters portNumber=22'"
+            --remote ec2-user@$instance_id $cidr
 
   vault:
     # A one-shot helper that may prompt for input.

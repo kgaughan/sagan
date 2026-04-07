@@ -28,25 +28,24 @@ clean:
 	find . -name \*.orig -delete
 	rm -rf sagan dist site .venv coverage.out coverage.html
 
-[private]
-venv:
-	test -e .venv || uv venv
-	uv pip install -r requirements.txt
-
-# rebuild documentation reqirements
-[group('documentation')]
-requirements:
-	uv pip compile -q requirements.in -o requirements.txt
-
 # serve the documentation locally
 [group('documentation')]
-serve-docs: venv
-	uv run mkdocs serve
+serve-docs: docs
+	python3 -m http.server -d site
 
 # build the documentation site
 [group('documentation')]
-docs: venv
-	uv run mkdocs build
+docs:
+	rm -rf site
+	pandoc docs/docs.md \
+		--standalone \
+		--from markdown \
+		--to chunkedhtml \
+		--variable toc \
+		--toc-depth 2 \
+		--chunk-template "%i.html" \
+		--template docs/template.html \
+		--output "site"
 
 # run the test suite
 [group('testing')]
