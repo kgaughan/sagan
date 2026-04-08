@@ -157,3 +157,15 @@ tasks:
       - file: terraform.tfvars.json
         name: thingy
 ```
+
+# Colophon
+
+This site was built using [pandoc](https://pandoc.org/). It uses the Open Sans
+font from Google. The theme was built from scratch as a learning exercise to
+figure out [flexbox](https://css-tricks.com/snippets/css/a-guide-to-flexbox/)
+layouts, but is inspired by those of [mdBook](https://rust-lang.github.io/mdBook/)
+and the [Tangled documentation](https://docs.tangled.org/), the latter of which
+also served as the source of the idea to build this theme in the first place
+as well as outlining how to get pandoc to play nice. The Solarized Dark theme
+came from [bewuethr/pandoc-bash-blog](https://github.com/bewuethr/pandoc-bash-blog/)
+with some very minor modifications.
