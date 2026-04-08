@@ -1,6 +1,14 @@
+:root {
+  --theme-bg: #1C2833;
+  --theme-fg: #AAB7B8;
+  --theme-nav-bg: #2E4053;
+  --theme-accent: #496684;
+  --theme-highlight: #F4F6F6;
+}
+
 body {
-  background: #1C2833;
-  color: #AAB7B8;
+  background: var(--theme-bg);
+  color: var(--theme-fg);
   font-family: "Open Sans", sans-serif;
   line-height: 1.4;
   margin: 0;
@@ -20,7 +28,7 @@ h1, h2, h3 {
 }
 
 nav a {
-  color: #AAB7B8;
+  color: var(--theme-fg);
   text-decoration: none;
 }
 nav a:hover {
@@ -29,12 +37,13 @@ nav a:hover {
 
 nav#toc {
   flex: 1 auto;
+  /* having both of these is a hack, but I'm not sure what else to do */
   min-width: 16rem;
   width: 16rem;
   overflow-y: auto;
-  background: #2E4053;
+  background: var(--theme-nav-bg);
   padding: 1rem;
-  border-right: 1px solid #496684;
+  border-right: 1px solid var(--theme-accent);
 }
 nav#toc ul {
   list-style: none outside;
@@ -67,7 +76,7 @@ main {
   flex: 1 100%;
 }
 main a {
-  color: #F4F6F6;
+  color: var(--theme-highlight);
 }
 
 pre {
@@ -75,9 +84,9 @@ pre {
 }
 
 .nav-outer {
-  border-top: 1px solid #496684;
+  border-top: 1px solid var(--theme-accent);
   flex: 1 auto;
-  background: #2E4053;
+  background: var(--theme-nav-bg);
 }
 
 nav#sitenav {
@@ -92,25 +101,23 @@ nav#sitenav > * {
   padding: 1rem;
 }
 
+.nav-prev::before, .nav-next::before {
+  font-weight: 800;
+  text-transform: lowercase;
+  font-variant: small-caps;
+  display: block;
+}
 .nav-prev {
   text-align: left;
 }
 .nav-prev::before {
-  font-weight: 800;
-  text-transform: lowercase;
-  font-variant: small-caps;
   content: "Previous";
-  display: block;
 }
 .nav-next {
   text-align: right;
 }
 .nav-next::before {
-  font-weight: 800;
-  text-transform: lowercase;
-  font-variant: small-caps;
   content: "Next";
-  display: block;
 }
 
 code {
