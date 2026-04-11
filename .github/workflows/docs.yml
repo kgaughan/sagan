@@ -27,22 +27,16 @@ jobs:
       - uses: actions/configure-pages@v6.0.0
         id: pages
 
-      - name: Build with pandoc
-        uses: docker://pandoc/core:3.9
+      - uses: pandoc/actions/setup@v1
         with:
-          args: >-
-            --standalone
-            --from markdown
-            --to chunkedhtml
-            --variable toc
-            --toc-depth 2
-            --chunk-template "%i.html"
-            --template docs/template.html
-            --highlight-style docs/solarizeddark.theme
-            --output "site"
-            docs/docs.md
+          version: 3.1.11.1
 
-      - run: find site -type f
+      - uses: extractions/setup-just@v4
+        with:
+          just-version: 1.40.0
+
+      - name: Build with pandoc
+        run: just docs
 
       - uses: actions/upload-pages-artifact@v4.0.0
         with:

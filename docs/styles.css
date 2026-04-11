@@ -27,6 +27,23 @@ h1, h2, h3 {
   font-weight: 800;
 }
 
+table {
+  border-collapse: collapse;
+}
+table th {
+  background: var(--theme-nav-bg);
+}
+table tr {
+  border-bottom: 1px solid var(--theme-nav-bg);
+}
+table tr:nth-child(even) {
+  background: rgba(255,255,255,0.025);
+}
+table th, table td {
+  vertical-align: top;
+  padding: 0.25rem 0.5rem;
+}
+
 nav a {
   color: var(--theme-fg);
   text-decoration: none;
