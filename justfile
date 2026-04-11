@@ -37,16 +37,16 @@ serve-docs: docs
 [group('documentation')]
 docs:
 	rm -rf site
-	pandoc docs/docs.md \
+	cd docs && pandoc docs.md \
 		--standalone \
-		--from markdown \
+		--from markdown+link_attributes \
 		--to chunkedhtml \
 		--variable toc \
 		--toc-depth 2 \
 		--chunk-template "%i.html" \
-		--template docs/template.html \
-		--highlight-style docs/solarizeddark.theme \
-		--output "site"
+		--template template.html \
+		--highlight-style solarizeddark.theme \
+		--output "../site"
 
 # run the test suite
 [group('testing')]
