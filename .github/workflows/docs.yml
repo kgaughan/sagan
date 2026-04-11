@@ -33,7 +33,7 @@ jobs:
 
       - uses: extractions/setup-just@v4
         with:
-          version: 1.40.0
+          just-version: 1.40.0
 
       - name: Build with pandoc
         run: just docs
