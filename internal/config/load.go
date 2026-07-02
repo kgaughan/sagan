@@ -7,7 +7,7 @@ import (
 
 	"github.com/kgaughan/sagan/internal/common"
 	"github.com/kgaughan/sagan/internal/model"
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v4"
 )
 
 // Config represents the root configuration object.
